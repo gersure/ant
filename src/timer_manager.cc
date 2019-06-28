@@ -2,8 +2,6 @@
 // Created by zhengcf on 2019-06-26.
 //
 
-
-// Boost libraries
 #include <thread>
 #include <chrono>
 #include <algorithm>
@@ -13,8 +11,8 @@
 
 namespace ant {
 
-timer_manager::TimerId const timer_manager::empty =
-        std::numeric_limits<timer_manager::TimerId>::max();
+//timer_manager::TimerId const timer_manager::empty =
+//        std::numeric_limits<timer_manager::TimerId>::max();
 
 /** @struct timer
  *  @brief simple container to keep one timer
@@ -53,7 +51,7 @@ timer_manager::add_timer(timer_manager::Timeout timeout,
     std::lock_guard<std::mutex> accessGuard(timeouts_mutex_);
 
     timer_ptr p_timer(new timer(++last_timer_, std::move(timeout_action), std::move(cancel_action)));
-    Timeout absolute_timeout = std::chrono::steady_clock::now().time_since_epoch() + timeout;
+    Timeout absolute_timeout = Clock::now().time_since_epoch() + timeout;
     TimeoutMap::iterator timer_it = timeouts_.insert(std::make_pair(absolute_timeout, p_timer));
 
     wait_condition_.notify_one();
@@ -126,13 +124,11 @@ void timer_manager::operator()() {
         TimeoutMap current_actions;
         { // opening scope for mutex
             std::lock_guard<std::mutex> accessGuard(timeouts_mutex_);
-            Timeout timeout_now = std::chrono::steady_clock::now().time_since_epoch();
+            Timeout timeout_now = Clock::now().time_since_epoch();
             // read current timeouts and execute actions for them
-            std::pair<TimeoutIterator, TimeoutIterator> match_time = timeouts_.equal_range(timeout_now);
-            std::cout<<"now:"<<timeout_now.count() << " begin:"<< timeouts_.begin()->first.count()
-            << " end: "<< match_time.second->first.count()<<std::endl;
-            current_actions.insert(timeouts_.begin(), match_time.second);
-            timeouts_.erase(timeouts_.begin(), match_time.second);
+            TimeoutIterator match_time = timeouts_.upper_bound(timeout_now);
+            current_actions.insert(timeouts_.begin(), match_time);
+            timeouts_.erase(timeouts_.begin(), match_time);
         } // mutex is closed here so if running action is doing something on timer_manager it will nod deadlock
         run_actions(current_actions);
         { // opening scope for mutex
@@ -140,7 +136,7 @@ void timer_manager::operator()() {
             /// @todo add check if time is not met for next timeout
             if (!timeouts_.empty()) {
                 TimeoutIterator next_timeout_it = timeouts_.begin();
-                std::chrono::steady_clock::time_point next_timeout_point(next_timeout_it->first);
+                Clock::time_point next_timeout_point(next_timeout_it->first);
                 wait_condition_.wait_until(accessGuard, next_timeout_point);
                 //std::cout << "timed_wait wakeup " << std::time(0) << std::endl;
             } else {

@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <ctime>
 #include <limits>
 #include <map>
 #include <memory>
@@ -17,13 +16,14 @@
 namespace ant {
 
 struct timer;
-typedef std::shared_ptr<timer> timer_ptr;
+using  timer_ptr = std::shared_ptr<timer> ;
 
 class timer_manager : noncopyable {
 public:
-    typedef unsigned long TimerId;
-    typedef std::chrono::steady_clock::duration Timeout;
-    typedef std::function<void(TimerId)> Action;
+    using Clock   = std::chrono::system_clock;
+    using TimerId = unsigned long;
+    using Timeout = Clock::duration;
+    using Action  = std::function<void(TimerId)>;
 
     /** @typedef std::multimap<Timeout, timer_ptr>  TimeoutMap
      * @brief map used to store each timeout mapped to it's action.
@@ -31,11 +31,12 @@ public:
      * @todo for now only timeout will be used as index simplifying to search and group of actions to execute.
      * @todo probably timers should be "rounded" when added to timer_manager to minimize wakeup count (e.g. 0.1 second timer groups)
      */
-    typedef std::multimap<Timeout, timer_ptr> TimeoutMap;
-    typedef TimeoutMap::iterator              TimeoutIterator;
-    typedef TimeoutMap::const_iterator        ConstTimeoutIterator;
 
-    static TimerId const empty;
+    using  TimeoutMap            = std::multimap<Timeout, timer_ptr>;
+    using  TimeoutIterator       = TimeoutMap::iterator;
+    using  ConstTimeoutIterator  = TimeoutMap::const_iterator;
+
+    static TimerId const empty = std::numeric_limits<timer_manager::TimerId>::max();
 public:
     timer_manager();
 
