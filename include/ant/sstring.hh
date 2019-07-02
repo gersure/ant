@@ -34,7 +34,7 @@
 #include <functional>
 #include <cstdio>
 #include <type_traits>
-#include "ant/util/std-compat.hh"
+#include "ant/util/std_compat.hh"
 #include "ant/temporary_buffer.hh"
 
 namespace ant {

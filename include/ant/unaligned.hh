@@ -47,7 +47,7 @@
 // access.
 
 
-#include "ant/util/std-compat.hh"
+#include "ant/util/std_compat.hh"
 
 namespace ant {
 

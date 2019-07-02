@@ -15,32 +15,32 @@
 
 namespace ant {
 
-struct timer;
-using  timer_ptr = std::shared_ptr<timer> ;
+struct lowres_timer;
+using lowres_timer_ptr = std::shared_ptr<lowres_timer>;
 
-class timer_manager : noncopyable {
+class lowres_timer_manager : noncopyable {
 public:
     using Clock   = std::chrono::system_clock;
     using TimerId = unsigned long;
     using Timeout = Clock::duration;
     using Action  = std::function<void(TimerId)>;
 
-    /** @typedef std::multimap<Timeout, timer_ptr>  TimeoutMap
+    /** @typedef std::multimap<Timeout, lowres_timer_ptr>  TimeoutMap
      * @brief map used to store each timeout mapped to it's action.
      * @todo probably this should be changed to use multi_index container or two separate containers to simplify searching for TimerId and for timeout.
      * @todo for now only timeout will be used as index simplifying to search and group of actions to execute.
      * @todo probably timers should be "rounded" when added to timer_manager to minimize wakeup count (e.g. 0.1 second timer groups)
      */
 
-    using  TimeoutMap            = std::multimap<Timeout, timer_ptr>;
-    using  TimeoutIterator       = TimeoutMap::iterator;
-    using  ConstTimeoutIterator  = TimeoutMap::const_iterator;
+    using TimeoutMap            = std::multimap<Timeout, lowres_timer_ptr>;
+    using TimeoutIterator       = TimeoutMap::iterator;
+    using ConstTimeoutIterator  = TimeoutMap::const_iterator;
 
-    static TimerId const empty = std::numeric_limits<timer_manager::TimerId>::max();
+    static TimerId const empty = std::numeric_limits<lowres_timer_manager::TimerId>::max();
 public:
-    timer_manager();
+    lowres_timer_manager();
 
-    ~timer_manager();
+    ~lowres_timer_manager();
 
 public:
     /**
@@ -77,11 +77,11 @@ private:
 
 private:
     TimeoutMap timeouts_;    //!< map storing all timeouts handled by manager
-    TimerId    last_timer_;
-    mutable std::mutex      timeouts_mutex_;
+    TimerId last_timer_;
+    mutable std::mutex timeouts_mutex_;
     std::condition_variable wait_condition_; //!< condition used by timer_manager thread to wait
 
-    mutable std::mutex      manager_mutex_;    //!< mutex protecting internal timer_manager state
+    mutable std::mutex manager_mutex_;    //!< mutex protecting internal timer_manager state
     bool is_stopping_;    //!< flag indicating that timer_manager is stopping
 };
 

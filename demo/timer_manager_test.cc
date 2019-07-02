@@ -9,7 +9,7 @@
 #include <functional>
 #include <thread>
 
-#include "ant/timer_manager.hh"
+#include "ant/lowres_timer_manager.hh"
 
 using namespace ant;
 
@@ -18,23 +18,23 @@ using std::chrono::microseconds;
 using std::placeholders::_1;
 
 /** simple timer action to print value on console */
-struct TimePrint : std::binary_function<timer_manager::TimerId, std::string, void> {
-    void operator()(timer_manager::TimerId id, std::string const &message) const {
+struct TimePrint : std::binary_function<lowres_timer_manager::TimerId, std::string, void> {
+    void operator()(lowres_timer_manager::TimerId id, std::string const &message) const {
         std::cout << message << ", id=" << id << std::endl;
     }
 };
 
 /** simple timer action to extend its timer */
-struct SelfExtend : std::unary_function<timer_manager::TimerId, void>{
-    SelfExtend(std::shared_ptr <timer_manager> manager)
+struct SelfExtend : std::unary_function<lowres_timer_manager::TimerId, void>{
+    SelfExtend(std::shared_ptr <lowres_timer_manager> manager)
             : manager_(manager) {}
 
-    void operator()(timer_manager::TimerId id) const {
+    void operator()(lowres_timer_manager::TimerId id) const {
         std::ostringstream ssMessage;
         ssMessage << "timer " << id;
-        std::shared_ptr<timer_manager> manager = manager_.lock();
+        std::shared_ptr<lowres_timer_manager> manager = manager_.lock();
         if (manager) {
-            timer_manager::TimerId new_id = manager->add_timer(seconds(10), SelfExtend(manager));
+            lowres_timer_manager::TimerId new_id = manager->add_timer(seconds(10), SelfExtend(manager));
             ssMessage << ", extended timer, new_id(" << new_id << ")" << std::endl;
         } else {
             ssMessage << ", Error manager pointer invalid" << std::endl;
@@ -43,18 +43,18 @@ struct SelfExtend : std::unary_function<timer_manager::TimerId, void>{
     }
 
 private:
-    std::weak_ptr<timer_manager> manager_;
+    std::weak_ptr<lowres_timer_manager> manager_;
 };
 
 /** timer action which will execute stop call on timer manager to stop timer work */
 struct TimerManagerFinish {
-    TimerManagerFinish(std::shared_ptr <timer_manager> manager)
+    TimerManagerFinish(std::shared_ptr <lowres_timer_manager> manager)
             : manager_(manager) {}
 
-    void operator()(timer_manager::TimerId id) const {
+    void operator()(lowres_timer_manager::TimerId id) const {
         std::ostringstream ssMessage;
         ssMessage << "timer " << id;
-        std::shared_ptr<timer_manager> manager = manager_.lock();
+        std::shared_ptr<lowres_timer_manager> manager = manager_.lock();
         if (manager) {
             manager->stop();
             ssMessage << ", send stop message to timer manager" << std::endl;
@@ -65,20 +65,20 @@ struct TimerManagerFinish {
     }
 
 private:
-    std::weak_ptr<timer_manager> manager_;
+    std::weak_ptr<lowres_timer_manager> manager_;
 };
 
 /**
  * @struct timer_manager_deleter
  * @brief Simple deleter which can be used with std::shared_ptr storing
- * timer_manager instance. Before deleting object it will call stop on timer
+ * lowres_timer_manager instance. Before deleting object it will call stop on timer
  * manager object to gracefully finish if it is executed by thread.
  *
  */
-struct timer_manager_deleter : std::unary_function<timer_manager *, void> {
+struct timer_manager_deleter : std::unary_function<lowres_timer_manager *, void> {
     timer_manager_deleter() : thread_() {};
 
-    void operator()(timer_manager *t) const {
+    void operator()(lowres_timer_manager *t) const {
         using std::cout;
         if (t) {
             t->stop();
@@ -104,14 +104,14 @@ struct timer_manager_deleter : std::unary_function<timer_manager *, void> {
 
 int main(int argc, char **argv) {
     using namespace std;
-    // declare new timer_manager
+    // declare new lowres_timer_manager
     std::shared_ptr<std::thread> manager_thread;
-    std::shared_ptr<timer_manager> manager(new timer_manager, timer_manager_deleter());
+    std::shared_ptr<lowres_timer_manager> manager(new lowres_timer_manager, timer_manager_deleter());
 
     manager->add_timer(seconds(1), std::bind(TimePrint(), _1, "timeout 1s"));
     manager->add_timer(seconds(2), std::bind(TimePrint(), _1, "timeout 2s no cancel"),
                        std::bind(TimePrint(), _1, "cancel"));
-    timer_manager::TimerId cancel_id = manager->add_timer(seconds(5), std::bind(TimePrint(),_1, "timeout 5s cancel"),
+    lowres_timer_manager::TimerId cancel_id = manager->add_timer(seconds(5), std::bind(TimePrint(),_1, "timeout 5s cancel"),
                                                           std::bind(TimePrint(), _1, "cancel 5s cancel"));
 
     manager_thread.reset(new std::thread(std::ref(*manager)));
