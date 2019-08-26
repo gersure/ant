@@ -27,6 +27,7 @@
 #include <boost/functional/hash.hpp>
 #include "ant/net/ip.hh"
 #include "ant/net/byteorder.hh"
+#include "ant/net/inet_address.hh"
 
 namespace ant {
 

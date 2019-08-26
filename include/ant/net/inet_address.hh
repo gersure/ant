@@ -105,8 +105,8 @@ public:
 std::ostream& operator<<(std::ostream&, const inet_address&);
 std::ostream& operator<<(std::ostream&, const inet_address::family&);
 
-}
-}
+} //namespace net
+} // namespace net
 
 namespace std {
 template<>

@@ -6,7 +6,7 @@ set(THIRD_LIBS ant)
 #include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 #list(APPEND THIRD_LIBS ${Boost_LIBRARIES} boost_serialization boost_system gtest)
 
-list(APPEND THIRD_LIBS gtest fmt boost_system yaml-cpp)
+list(APPEND THIRD_LIBS gtest fmt boost_system yaml-cpp pthread)
 
 
 include_directories(../include)

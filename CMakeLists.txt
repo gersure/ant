@@ -31,7 +31,7 @@ set(SOURCE_FILES
         src/net/ip.cc
         src/lowres_timer_manager.cc
         src/timer_manager.cc
-        )
+        include/ant/util/defer.hh)
 
 
 add_library(ant ${SOURCE_FILES})
